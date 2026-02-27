@@ -1,0 +1,7 @@
+<Solution>
+  <Project Path="Ecom.Application.Authentication/Ecom.Application.Authentication.csproj" Id="554e99fb-e224-4233-b6fe-3aac9ccfedf8" />
+  <Project Path="Ecom.Application.Product/Ecom.Application.Product.csproj" Id="3e28c7f2-9c43-4bec-b055-2bff75f6e543" />
+  <Project Path="Ecom.Application.User/Ecom.Application.User.csproj" Id="6b753486-5c30-4d10-9adc-b40c78654e4b" />
+  <Project Path="Ecom.Web.Shared/Ecom.Web.Shared.csproj" Id="d3a880d4-c9ac-46a0-be23-3b780f1191a0" />
+  <Project Path="Ecom.Web/Ecom.Web.csproj" />
+</Solution>
