@@ -3,6 +3,7 @@ using Ecom.Web.Shared.Models.Custom;
 using Ecom.Web.Shared.Models.Settings;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
+using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text.Json;
 
@@ -26,7 +27,7 @@ namespace Ecom.Web.Common.Auth
             .AddCookie(CookieAuthenticationDefaults.AuthenticationScheme, options =>
             {
                 options.LoginPath = "/dang-nhap-he-thong";
-                options.Cookie.Name = "CMS_Auth_Cookie";
+                options.Cookie.Name = "Auth_Cookie";
                 options.ExpireTimeSpan = TimeSpan.FromHours(8);
                 options.SlidingExpiration = true; // Gia hạn cookie khi user hoạt động
 
@@ -49,7 +50,8 @@ namespace Ecom.Web.Common.Auth
 
                 options.CallbackPath = "/signin-oidc";
                 options.SignedOutCallbackPath = "/signout-callback-oidc";
-
+                options.Scope.Add("email");
+                options.Scope.Add("profile");
                 // Nạp Scope
                 options.Scope.Clear();
                 var scopes = clientIdentityConfig.AuthScope?.Split(' ', StringSplitOptions.RemoveEmptyEntries);
@@ -65,48 +67,20 @@ namespace Ecom.Web.Common.Auth
                     {
                         var logger = context.HttpContext.RequestServices.GetRequiredService<ILogger<Program>>();
                         var claimsIdentity = context.Principal?.Identity as ClaimsIdentity;
-                        if (claimsIdentity == null) return;
-                        var accessToken = context.TokenEndpointResponse?.AccessToken;
-                        if (!string.IsNullOrEmpty(accessToken))
+
+                        if (claimsIdentity != null)
                         {
-                            //claimsIdentity.AddClaim(new Claim("access_token", accessToken));
-                            //logger.LogInformation($"Token ở đây nè nhìn vào đây: {accessToken}");
-                        }
-
-                        var userId = claimsIdentity.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-
-                        if (string.IsNullOrEmpty(userId)) return;
-
-                        // 3. GỌI API BỔ SUNG THÔNG TIN (Ví dụ lấy Avatar, Rank, hoặc Role đặc thù)
-                        try
-                        {
-                            var userInformation = context.HttpContext.RequestServices.GetRequiredService<IUserInformation>();
-                            var extraInfo = await userInformation.GetUserInfoAsync(accessToken);
-                            if (extraInfo != null && extraInfo.IsSuccess)
+                            // Chỉ giữ lại Logger để kiểm tra xem Token có về đúng ý không
+                            var accessToken = context.TokenEndpointResponse?.AccessToken;
+                            if (!string.IsNullOrEmpty(accessToken))
                             {
-                                var userInforDto = extraInfo.Data;
-
-                                claimsIdentity.AddClaim(new Claim(ClaimTypes.NameIdentifier, userInforDto.Id.ToString()));
-                                claimsIdentity.AddClaim(new Claim(ClaimTypes.Name, userInforDto.FullName));
-                                claimsIdentity.AddClaim(new Claim(ClaimCustomTypes.Avatar.ToString(), userInforDto.Avatar));
-                                claimsIdentity.AddClaim(new Claim(ClaimCustomTypes.DepartmentName.ToString(), userInforDto.DepartmentName));
-                                claimsIdentity.AddClaim(new Claim(ClaimCustomTypes.WorkplaceName.ToString(), userInforDto.WorkplaceName));
-
-                                foreach (var deptCode in userInforDto.DeptCodes)
-                                {
-                                    claimsIdentity.AddClaim(new Claim(ClaimTypes.Role, deptCode));
-                                }
-
-                                // Chỉ lấy Type và Value của các Claim để log
-                                var userClaims = claimsIdentity.Claims.Select(c => new { c.Type, c.Value });
-
-                                logger.LogInformation("Thông tin claim user login: {Claims}", JsonSerializer.Serialize(userClaims));
+                                logger.LogInformation("Đã nhận Access Token thành công.");
+                                logger.LogInformation($"Token ở đây nè nhìn vào đây: {accessToken}");
                             }
-                        }
-                        catch (Exception ex)
-                        {
 
-                            logger.LogError(ex, "Lỗi xảy ra khi gọi UserService để lấy thêm thông tin cho User {UserId}", userId);
+                            // Kiểm tra xem Claim đã được map tự động chưa
+                            var email = claimsIdentity.FindFirst(ClaimTypes.Email)?.Value;
+                            logger.LogInformation("Email của User từ Token: {Email}", email);
                         }
                         await Task.CompletedTask;
                     },

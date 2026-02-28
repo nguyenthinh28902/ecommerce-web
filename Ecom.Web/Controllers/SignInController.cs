@@ -29,7 +29,7 @@ namespace Ecom.Web.Controllers
 
         [HttpPost("chuyen-trang-dang-nhap")]
         [ValidateAntiForgeryToken] // Bảo mật chống giả mạo request
-        public IActionResult RedirectToLogin(string returnUrl)
+        public IActionResult RedirectToLogin(string returnUrl = "/")
         {
             // 1. Bảo mật: Đảm bảo returnUrl là đường dẫn nội bộ, tránh Open Redirect Attack
             // Nếu không hợp lệ hoặc trống, mặc định quay về trang chủ
