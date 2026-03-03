@@ -1,0 +1,54 @@
+﻿@using Ecom.Web.Shared.Models.Product.Discovery
+@model ProductFilterMenuViewModel
+
+<div class="flex gap-8 text-[12px] font-normal text-gray-600 items-center">
+    @* 1. Dropdown Danh mục *@
+    <div class="group relative py-4">
+        <a href="#" class="hover:text-black transition flex items-center gap-1">
+            Danh mục <i class="bi bi-chevron-down text-[10px]"></i>
+        </a>
+
+        <div class="absolute top-full left-0 hidden group-hover:block w-64 bg-white shadow-2xl rounded-2xl border border-gray-100 p-4 pt-2 z-[100] animate-in fade-in slide-in-from-top-2 duration-200">
+            <div class="grid grid-cols-1 gap-1">
+                <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2 px-2">Tất cả danh mục</p>
+                @foreach (var cat in Model.Categories)
+                {
+                    @* Chuẩn .NET: Tự động map NameAscii vào tham số {slug} *@
+                    <a asp-controller="Home"
+                       asp-action="ProductList"
+                       asp-route-slug="@cat.NameAscii"
+                       class="px-3 py-2 rounded-xl hover:bg-gray-50 hover:text-[#0071e3] transition flex items-center justify-between group/item">
+                        <span>@cat.Name</span>
+                        <i class="bi bi-arrow-right opacity-0 group-hover/item:opacity-100 transition-all"></i>
+                    </a>
+                }
+            </div>
+        </div>
+    </div>
+
+    @* 2. Dropdown Thương hiệu *@
+    <div class="group relative py-4">
+        <a href="#" class="hover:text-black transition flex items-center gap-1">
+            Thương hiệu <i class="bi bi-chevron-down text-[10px]"></i>
+        </a>
+
+        <div class="absolute top-full left-0 hidden group-hover:block w-48 bg-white shadow-2xl rounded-2xl border border-gray-100 p-4 pt-2 z-[100]">
+            <div class="grid grid-cols-1 gap-1">
+                <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2 px-2">Hãng nổi bật</p>
+                @foreach (var brand in Model.Brands)
+                {
+                    @* Kết hợp Logic: dtdd-apple (Giả sử dtdd là mặc định hoặc dùng 'tat-ca') *@
+                    <a asp-controller="Product"
+                       asp-action="ProductList"
+                       asp-route-slug="@($"thuong-hieu-{brand.NameAscii}")"
+                       class="px-3 py-2 rounded-xl hover:bg-gray-50 hover:text-[#0071e3] transition-all">
+                        @brand.Name
+                    </a>
+                }
+            </div>
+        </div>
+    </div>
+
+    <a href="/" class="hover:text-black transition py-4">Cửa hàng</a>
+    <a href="#" class="hover:text-black transition py-4">Hỗ trợ</a>
+</div>

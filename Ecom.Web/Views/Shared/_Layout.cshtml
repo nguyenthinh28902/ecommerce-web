@@ -4,46 +4,51 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - TechStore</title>
+    <link rel="stylesheet" href="~/css/site.min.css" asp-append-version="true" />
+    @await RenderSectionAsync("Styles", required: false)
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body {
             font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
+            background-color: #f5f5f7; 
         }
 
         .frosted {
             backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px); 
+        }
+
+        /* Tối ưu header giống Apple */
+        header {
+            background-color: rgba(255, 255, 255, 0.7);
         }
     </style>
 </head>
-<body class="bg-[#f5f5f7] text-[#1d1d1f]">
-    <header class="sticky top-0 z-50 bg-white/70 frosted border-b border-gray-200">
+<body class="text-[#1d1d1f]">
+    <header class="sticky top-0 z-50 frosted border-b border-gray-200">
         <nav class="max-w-[1000px] mx-auto h-12 flex items-center justify-between px-4">
 
-            <a asp-controller="Home" asp-action="Index" class="font-semibold hover:opacity-70 transition">
-                TechStore
+            <a asp-controller="Home" asp-action="Index" class="font-semibold hover:opacity-70 transition text-[17px]">
+                 <span class="sr-only">TechStore</span>
             </a>
 
-            <div class="hidden md:flex gap-8 text-[12px] font-normal text-gray-600">
-                <a href="#" class="hover:text-black transition">Cửa hàng</a>
-                <a href="#" class="hover:text-black transition">iPhone</a>
-                <a href="#" class="hover:text-black transition">Mac</a>
-                <a href="#" class="hover:text-black transition">Hỗ trợ</a>
+            <div class="hidden md:flex gap-8 text-[12px] font-normal text-gray-600 items-center">
+               
+                @await Component.InvokeAsync("Navigation")
+
             </div>
 
             <div class="flex items-center gap-6">
-                @* Icon giỏ hàng *@
+                
                 <a asp-controller="Cart" asp-action="Index" class="text-[16px] hover:opacity-70 transition">
                     🛒
                 </a>
 
-                @* Form để gửi POST Request kèm Token bảo mật *@
+              
                 <form asp-controller="SignIn" asp-action="RedirectToLogin" method="post" class="m-0 p-0">
-                    @* Gửi kèm returnUrl để sau khi login xong biết đường mà quay lại trang cũ *@
                     <input type="hidden" name="returnUrl" value="@Context.Request.Path" />
-
                     <button type="submit"
-                            class="text-[12px] font-medium bg-[#1d1d1f] text-white px-4 py-1.5 rounded-full hover:bg-gray-800 transition shadow-sm leading-none border-none outline-none cursor-pointer">
+                            class="text-[11px] font-medium bg-[#1d1d1f] text-white px-4 py-1.5 rounded-full hover:bg-gray-800 transition shadow-sm leading-none border-none cursor-pointer">
                         Đăng nhập
                     </button>
                 </form>
@@ -51,8 +56,9 @@
 
         </nav>
     </header>
+
     <main role="main">
-        @RenderBody() @* Nơi nội dung của Index.cshtml sẽ nhảy vào đây *@
+        @RenderBody()
     </main>
 
     <footer class="py-12 bg-[#f5f5f7] border-t border-gray-300 mt-20">
@@ -61,6 +67,7 @@
             <div class="flex gap-4 mt-2">
                 <a href="#" class="hover:underline">Chính sách bảo mật</a>
                 <a href="#" class="hover:underline">Điều khoản sử dụng</a>
+                <a href="#" class="hover:underline">Bản đồ trang web</a>
             </div>
         </div>
     </footer>

@@ -34,12 +34,18 @@ namespace Ecom.Web.Common.HeaderHandler
             }).AddHttpMessageHandler<AuthenticationHeaderHandler>(); // Cần thêm dòng này
 
 
-            services.AddHttpClient<IProductSummaryService, ProductSummaryService>(client =>
+            services.AddHttpClient<IProductService, ProductService>(client =>
             {
                 client.BaseAddress = new Uri($"{configServiceUrl.GatewayUrl}{ConfigApiProductService.GetDefault}");
                 // Để hẳn 10 phút cho thoải mái Debug
                 client.Timeout = TimeSpan.FromMinutes(10);
-            }).AddHttpMessageHandler<AuthenticationHeaderHandler>(); // Cần thêm dòng này
+            }).AddHttpMessageHandler<AuthenticationHeaderHandler>();
+            services.AddHttpClient<IDiscoveryService, DiscoveryService>(client =>
+            {
+                client.BaseAddress = new Uri($"{configServiceUrl.GatewayUrl}{ConfigApiProductService.GetDefault}");
+                // Để hẳn 10 phút cho thoải mái Debug
+                client.Timeout = TimeSpan.FromMinutes(10);
+            }).AddHttpMessageHandler<AuthenticationHeaderHandler>();
             return services;
         }
     }

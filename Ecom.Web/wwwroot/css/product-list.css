@@ -1,0 +1,29 @@
+﻿/* Custom Pagination style Apple */
+.pagination-container .active a {
+    background-color: #1d1d1f !important;
+    color: white !important;
+    border-color: #1d1d1f !important;
+}
+
+.pagination-container li a {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    border: 1px solid transparent;
+    transition: all 0.2s ease;
+    color: #86868b;
+    text-decoration: none;
+}
+
+    .pagination-container li a:hover {
+        background-color: #f5f5f7;
+        color: #000;
+    }
+
+.pagination-container li.disabled a {
+    color: #d2d2d7;
+    cursor: not-allowed;
+}

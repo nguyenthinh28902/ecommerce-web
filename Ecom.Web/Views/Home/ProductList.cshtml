@@ -1,0 +1,78 @@
+﻿@using X.PagedList.Mvc.Core;
+@using X.PagedList;
+@model Ecom.Web.Shared.Models.Product.ProductListViewModel
+
+@{
+    ViewData["Title"] = Model.CategoryName ?? "Sản phẩm";
+    
+    // Tính toán PageSize dựa trên dữ liệu API để phân trang khớp 100%
+    int pageSize = Model.TotalPages > 0 ? (int)Math.Ceiling((double)Model.TotalItems / Model.TotalPages) : 12;
+
+    var pagedList = new StaticPagedList<Ecom.Web.Shared.Models.Product.ProductCardViewModel>(
+        Model.Products, 
+        Model.CurrentPage, 
+        pageSize, 
+        Model.TotalItems
+    );
+}
+
+<div class="max-w-[1200px] mx-auto px-6 py-12 flex flex-col md:flex-row gap-10">
+    <aside class="w-full md:w-64 flex-shrink-0">
+        <div class="sticky top-24">
+            <h2 class="text-xl font-bold mb-6 border-b pb-4">Bộ lọc</h2>
+            
+            <div class="mb-8">
+                <h3 class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4">Sắp xếp</h3>
+                <select onchange="location = this.value;" class="w-full bg-white border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none">
+                    <option value="@Url.Action("ProductList", new { slug = ViewBag.CurrentSlug, sapxep = "moi-nhat" })">Mới nhất</option>
+                    <option value="@Url.Action("ProductList", new { slug = ViewBag.CurrentSlug, sapxep = "gia-thap" })">Giá thấp đến cao</option>
+                    <option value="@Url.Action("ProductList", new { slug = ViewBag.CurrentSlug, sapxep = "gia-cao" })">Giá cao đến thấp</option>
+                </select>
+            </div>
+
+            <div class="mb-8">
+                <h3 class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4">Thương hiệu</h3>
+                <div class="mb-8 pb-8 border-b border-gray-200">
+                    <h3 class="text-sm font-bold uppercase tracking-wider mb-4">Thương hiệu</h3>
+                    <div class="grid grid-cols-2 gap-2">
+                        @* Tui giả định ông có list Brands, nếu không thì hardcode tạm vài cái phổ biến *@
+                        <button class="px-3 py-2 border border-gray-200 rounded-lg text-sm hover:border-black">Apple</button>
+                        <button class="px-3 py-2 border border-gray-200 rounded-lg text-sm hover:border-black">Samsung</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <div class="flex-grow">
+        <div class="mb-10">
+            <h1 class="text-4xl font-bold text-[#1d1d1f] mb-2">@Model.CategoryName</h1>
+            <p class="text-gray-500">Trang @Model.CurrentPage / @Model.TotalPages (@Model.TotalItems sản phẩm)</p>
+        </div>
+
+        <div class="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            @foreach (var item in Model.Products)
+            {
+                @await Html.PartialAsync("_ProductCard", item)
+            }
+        </div>
+
+        <div class="mt-20 flex justify-center border-t border-gray-200 pt-10">
+            <div class="pagination-apple">
+                @Html.PagedListPager(pagedList, t => Url.Action("ProductList", new { 
+                    slug = ViewBag.CurrentSlug, 
+                    trang = t, 
+                    timkiem = ViewBag.SearchTerm 
+                }), new PagedListRenderOptions {
+                    LiElementClasses = new string[] { "mx-1" },
+                    UlElementClasses = new string[] { "flex items-center" },
+                    ContainerDivClasses = new string[] { "pagination-container" },
+                    LinkToNextPageFormat = "→",
+                    LinkToPreviousPageFormat = "←",
+                    DisplayLinkToFirstPage = PagedListDisplayMode.Never,
+                    DisplayLinkToLastPage = PagedListDisplayMode.Never
+                })
+            </div>
+        </div>
+    </div>
+</div>

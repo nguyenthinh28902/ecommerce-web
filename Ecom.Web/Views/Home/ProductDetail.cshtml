@@ -1,0 +1,200 @@
+﻿@using Ecom.Web.Shared.Models.Product
+@model ProductDetailViewModel
+@{
+    ViewData["Title"] = Model.Name;
+}
+
+<div class="bg-white">
+    <nav class="max-w-[1000px] mx-auto px-4 py-4 text-[12px] text-gray-500 flex gap-2">
+        <a asp-controller="Home" asp-action="Index" class="hover:text-black transition">Trang chủ</a>
+        @foreach (var bc in Model.Breadcrumbs)
+        {
+            <span>/</span>
+            <a asp-controller="Home"
+               asp-action="ProductList"
+               asp-route-slug="@bc.NameAscii"
+               class="hover:text-black transition">@bc.Name</a>
+        }
+    </nav>
+
+    <div class="max-w-[1000px] mx-auto px-4 pb-20">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-12">
+
+            <div class="space-y-4">
+                <div class="sticky top-24">
+                    <div class="aspect-square bg-[#f5f5f7] rounded-2xl overflow-hidden shadow-sm">
+                        @if (Model.Images.Any())
+                        {
+                            <img id="main-product-image"
+                                 src="@Model.Images.First().ImagePath"
+                                 alt="@Model.Name"
+                                 class="w-full h-full object-contain p-8 transition-opacity duration-300" />
+                        }
+                    </div>
+                    <div class="grid grid-cols-5 gap-2 mt-4">
+                        @foreach (var img in Model.Images)
+                        {
+                            <button type="button"
+                                    onclick="changeImage('@img.ImagePath')"
+                                    class="aspect-square border border-gray-200 rounded-lg overflow-hidden hover:border-black transition">
+                                <img src="@img.ImagePath" alt="@Model.Name" class="w-full h-full object-cover" />
+                            </button>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <div class="space-y-8">
+                <div>
+                    <p class="text-[12px] font-semibold text-orange-600 uppercase tracking-widest mb-1">@Model.BrandName</p>
+                    <h1 class="text-4xl font-bold tracking-tight text-[#1d1d1f]">@Model.Name</h1>
+
+                    @* Trạng thái kinh doanh *@
+                    <div class="flex items-center gap-2 mt-2">
+                        <span class="flex h-2 w-2 rounded-full @(Model.IsActive ? "bg-green-500" : "bg-red-500")"></span>
+                        <span class="text-sm font-medium @(Model.IsActive ? "text-green-700" : "text-red-700")">@Model.StatusString</span>
+                    </div>
+
+                    <p class="text-gray-500 mt-2">@Model.ShortDescription</p>
+                </div>
+
+                <div class="flex items-baseline gap-4">
+                    <span class="text-3xl font-bold text-[#1d1d1f]">@Model.Price.ToString("N0") @Model.CurrencyUnit</span>
+                    @if (Model.OriginalPrice > Model.Price)
+                    {
+                        <span class="text-xl text-gray-400 line-through">@Model.OriginalPrice?.ToString("N0") @Model.CurrencyUnit</span>
+                        <span class="bg-red-50 text-red-600 text-xs font-bold px-2 py-1 rounded">-@Model.DiscountPercentage%</span>
+                    }
+                </div>
+
+                <hr class="border-gray-100" />
+
+                @if (Model.GroupProducts.Any())
+                {
+                    <div class="space-y-4">
+                        <h3 class="text-[14px] font-semibold">Chọn phiên bản</h3>
+                        <div class="grid grid-cols-2 gap-3">
+                            @foreach (var related in Model.GroupProducts)
+                            {
+                                @* Sử dụng asp-all-route-data để truyền slug động từ route *@
+                                <a asp-controller="Home"
+                                   asp-action="ProductDetail"
+                                   asp-route-categorySlug="@ViewContext.RouteData.Values["categorySlug"]"
+                                   asp-route-productSlug="@related.NameAscii"
+                                   class="p-4 border rounded-xl flex flex-col items-center justify-center transition-all @(related.IsCurrent ? "border-blue-500 ring-1 ring-blue-500 bg-blue-50/10" : "border-gray-200 hover:border-black")">
+                                    <span class="text-[14px] font-medium">@related.VersionName</span>
+                                </a>
+                            }
+                        </div>
+                    </div>
+                }
+
+                @if (Model.Variants.Any())
+                {
+                    <div class="space-y-4">
+                        <h3 class="text-[14px] font-semibold">Chọn màu: <span class="text-gray-500 font-normal">@Model.VersionName</span></h3>
+                        <div class="flex gap-4">
+                            @foreach (var v in Model.Variants)
+                            {
+                                @* Dùng asp-route-phienban cho Query String chuẩn xác *@
+                                <a asp-controller="Home"
+                                   asp-action="ProductDetail"
+                                   asp-route-categorySlug="@ViewContext.RouteData.Values["categorySlug"]"
+                                   asp-route-productSlug="@Model.NameAscii"
+                                   asp-route-phienban="@v.NameAscii"
+                                   title="@v.ColorName"
+                                   class="w-10 h-10 rounded-full border-2 p-0.5 transition-all @(v.NameAscii == Context.Request.Query["phienban"] ? "border-blue-500 scale-110" : "border-gray-200 hover:scale-105")">
+                                    <div class="w-full h-full rounded-full border border-gray-100" style="background-color: @v.ColorCode"></div>
+                                </a>
+                            }
+                        </div>
+                    </div>
+                }
+
+                <div class="pt-6 space-y-4">
+                    <form asp-controller="Cart" asp-action="AddToCart" method="post">
+                        <input type="hidden" name="productId" value="@Model.Id" />
+                        <button type="submit" class="w-full bg-[#0071e3] text-white py-4 rounded-xl font-semibold text-[17px] hover:bg-[#0077ed] transition shadow-lg shadow-blue-500/20">
+                            Thêm vào giỏ hàng
+                        </button>
+                    </form>
+                    <p class="text-center text-[12px] text-gray-500">Miễn phí giao hàng cho tất cả đơn hàng Apple</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="mt-24 pt-16 border-t border-gray-100">
+            <h2 class="text-3xl font-bold mb-12 text-center text-[#1d1d1f]">Thông số kỹ thuật</h2>
+            <div class="max-w-2xl mx-auto relative">
+                <div id="spec-container" class="space-y-8 overflow-hidden transition-all duration-500 max-h-[400px]">
+                    @foreach (var group in Model.Specifications)
+                    {
+                        <div class="space-y-4">
+                            <h3 class="text-[17px] font-bold border-b pb-2">@group.GroupName</h3>
+                            <div class="space-y-3">
+                                @foreach (var attr in group.Attributes)
+                                {
+                                    <div class="flex justify-between text-[14px] leading-relaxed">
+                                        <span class="text-gray-500">@attr.Key</span>
+                                        <span class="font-medium text-right w-2/3">@attr.Value</span>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    }
+                </div>
+
+                <div id="spec-gradient" class="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-white to-transparent pointer-events-none"></div>
+
+                <div class="flex justify-center mt-8">
+                    <button type="button" onclick="toggleSpecs()" id="btn-toggle-spec"
+                            class="px-8 py-2.5 border border-gray-300 rounded-full text-[14px] font-semibold hover:bg-gray-50 transition flex items-center gap-2">
+                        <span id="toggle-text">Xem cấu hình chi tiết</span>
+                        <svg id="toggle-icon" class="w-4 h-4 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="mt-24">
+            <h2 class="text-3xl font-bold mb-8 text-center">Đặc điểm nổi bật</h2>
+            <div class="max-w-3xl mx-auto text-gray-600 leading-loose">
+                @* Lưu ý: Description thường chứa HTML nên dùng cách này là chuẩn nhất *@
+                @Html.Raw(Model.FullDescription)
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function changeImage(path) {
+        const img = document.getElementById('main-product-image');
+        img.style.opacity = '0';
+        setTimeout(() => {
+            img.src = path;
+            img.style.opacity = '1';
+        }, 150);
+    }
+
+    function toggleSpecs() {
+        const container = document.getElementById('spec-container');
+        const gradient = document.getElementById('spec-gradient');
+        const text = document.getElementById('toggle-text');
+        const icon = document.getElementById('toggle-icon');
+
+        if (container.style.maxHeight === 'none') {
+            container.style.maxHeight = '400px';
+            gradient.style.display = 'block';
+            text.innerText = 'Xem cấu hình chi tiết';
+            icon.style.transform = 'rotate(0deg)';
+            container.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        } else {
+            container.style.maxHeight = 'none';
+            gradient.style.display = 'none';
+            text.innerText = 'Thu gọn';
+            icon.style.transform = 'rotate(180deg)';
+        }
+    }
+</script>

@@ -10,8 +10,6 @@ namespace Ecom.Application.Product
     {
         public static IServiceCollection AddApplicationProductDependencyInjection(this IServiceCollection services, IConfiguration configuration)
         {
-
-
             return services;
         }
 

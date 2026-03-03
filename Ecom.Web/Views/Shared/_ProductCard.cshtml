@@ -1,0 +1,65 @@
+﻿@model Ecom.Web.Shared.Models.Product.ProductCardViewModel
+
+<div class="group relative bg-white rounded-2xl p-4 shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-100 flex flex-col h-full">
+    @* Nhãn Mới & Giảm giá *@
+    <div class="absolute top-3 left-3 z-10 flex flex-col gap-2">
+        @if (Model.IsNewArrival)
+        {
+            <span class="bg-blue-600 text-white text-[10px] font-bold px-2 py-1 rounded-md uppercase">Mới</span>
+        }
+        @if (Model.DiscountPercentage > 0)
+        {
+            <span class="bg-red-500 text-white text-[10px] font-bold px-2 py-1 rounded-md">
+                -@Model.DiscountPercentage%
+            </span>
+        }
+    </div>
+
+    @* Hình ảnh sản phẩm: Sử dụng Tag Helper dẫn tới trang ProductDetail *@
+    <a asp-controller="Home"
+       asp-action="ProductDetail"
+       asp-route-categorySlug="@(Model.CategoryNameAscii ?? "danhmuc")"
+       asp-route-productSlug="@Model.NameAscii"
+       class="aspect-square overflow-hidden rounded-xl mb-4 bg-gray-50 block">
+
+        <img src="@(string.IsNullOrEmpty(Model.MainImage) ? "/images/no-image.png" : Model.MainImage)"
+             alt="@Model.Name"
+             class="w-full h-full object-contain group-hover:scale-110 transition-transform duration-500" />
+    </a>
+
+    <div class="flex flex-col flex-grow">
+        @* Thương hiệu *@
+        <p class="text-xs text-gray-400 mb-1">@Model.BrandName</p>
+
+        @* Tên sản phẩm: Link chuẩn SEO dùng Tag Helper *@
+        <h3 class="text-sm font-medium text-gray-900 line-clamp-2 mb-2 group-hover:text-[#0071e3] transition-colors">
+            <a asp-controller="Home"
+               asp-action="ProductDetail"
+               asp-route-categorySlug="@(Model.CategoryNameAscii ?? "danhmuc")"
+               asp-route-productSlug="@Model.NameAscii">
+                @Model.Name
+            </a>
+        </h3>
+
+        @* Giá cả *@
+        <div class="mt-auto pt-2 flex flex-wrap items-baseline gap-x-2 gap-y-1">
+            <span class="text-lg font-bold text-gray-900">
+                @Model.Price.ToString("N0") <span class="text-xs font-normal">@Model.CurrencyUnit</span>
+            </span>
+
+            @if (Model.OriginalPrice > Model.Price)
+            {
+                <span class="text-xs text-gray-400 line-through">
+                    @Model.OriginalPrice.ToString("N0")
+                </span>
+
+                @if (Model.DiscountPercentage > 0)
+                {
+                    <span class="text-[11px] font-bold text-red-500 bg-red-50 px-1.5 py-0.5 rounded">
+                        -@Model.DiscountPercentage%
+                    </span>
+                }
+            }
+        </div>
+    </div>
+</div>
