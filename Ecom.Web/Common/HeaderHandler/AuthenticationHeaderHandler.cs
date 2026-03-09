@@ -30,7 +30,7 @@ namespace Ecom.Web.Common.HeaderHandler
             var response = await base.SendAsync(request, cancellationToken);
 
             // Xử lý làm mới token nếu API trả về lỗi không được phép
-            if (response.StatusCode == HttpStatusCode.Unauthorized)
+            if (response.StatusCode == HttpStatusCode.Unauthorized && !string.IsNullOrEmpty(accessToken))
             {
                 var refreshToken = await _httpContextAccessor.HttpContext.GetTokenAsync("refresh_token");
 

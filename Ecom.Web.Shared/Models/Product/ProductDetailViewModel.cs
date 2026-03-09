@@ -8,6 +8,7 @@ namespace Ecom.Web.Shared.Models.Product
     {
         // --- Thông tin cơ bản ---
         public int Id { get; set; }
+        public int VariantId { get; set; }
         public string Name { get; set; } = null!;
         public string BrandName { get; set; } = null!;
         public string NameAscii { get; set; } = null!;

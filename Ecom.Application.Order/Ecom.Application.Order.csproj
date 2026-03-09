@@ -1,0 +1,15 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Ecom.Application.Customer\Ecom.Application.Customer.csproj" />
+    <ProjectReference Include="..\Ecom.Application.Payment\Ecom.Application.Payment.csproj" />
+    <ProjectReference Include="..\Ecom.Web.Shared\Ecom.Web.Shared.csproj" />
+  </ItemGroup>
+
+</Project>

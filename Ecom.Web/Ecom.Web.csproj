@@ -20,6 +20,9 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Ecom.Application.Authentication\Ecom.Application.Authentication.csproj" />
+    <ProjectReference Include="..\Ecom.Application.Customer\Ecom.Application.Customer.csproj" />
+    <ProjectReference Include="..\Ecom.Application.Order\Ecom.Application.Order.csproj" />
+    <ProjectReference Include="..\Ecom.Application.Payment\Ecom.Application.Payment.csproj" />
     <ProjectReference Include="..\Ecom.Application.Product\Ecom.Application.Product.csproj" />
     <ProjectReference Include="..\Ecom.Application.User\Ecom.Application.User.csproj" />
     <ProjectReference Include="..\Ecom.Web.Shared\Ecom.Web.Shared.csproj" />

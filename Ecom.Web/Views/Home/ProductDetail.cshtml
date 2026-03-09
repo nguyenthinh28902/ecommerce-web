@@ -112,12 +112,10 @@
                 }
 
                 <div class="pt-6 space-y-4">
-                    <form asp-controller="Cart" asp-action="AddToCart" method="post">
-                        <input type="hidden" name="productId" value="@Model.Id" />
-                        <button type="submit" class="w-full bg-[#0071e3] text-white py-4 rounded-xl font-semibold text-[17px] hover:bg-[#0077ed] transition shadow-lg shadow-blue-500/20">
-                            Thêm vào giỏ hàng
-                        </button>
-                    </form>
+                    <button onclick="addToBag(@Model.Id,@Model.VariantId)"
+                            class="w-full bg-[#0071e3] text-white py-4 rounded-full font-semibold text-[17px] hover:bg-[#0077ed] transition">
+                        Thêm vào giỏ hàng
+                    </button>
                     <p class="text-center text-[12px] text-gray-500">Miễn phí giao hàng cho tất cả đơn hàng Apple</p>
                 </div>
             </div>
@@ -195,6 +193,30 @@
             gradient.style.display = 'none';
             text.innerText = 'Thu gọn';
             icon.style.transform = 'rotate(180deg)';
+        }
+    }
+
+    async function addToBag(productId, variantId) {
+        try {
+            const response = await fetch('/gio-hang/them-moi', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ productId: productId, variantId: variantId ,quantity: 1 })
+            });
+
+            const result = await response.json();
+
+            if (result.isSuccess) {
+                // Điều hướng sang trang giỏ hàng hoặc hiện thông báo
+                window.location.href = '/gio-hang';
+            } else {
+                alert(result.noti || "Không thể thêm vào giỏ hàng");
+            }
+        } catch (error) {
+            console.error("Lỗi:", error);
+            alert("Đã có lỗi xảy ra khi kết nối hệ thống");
         }
     }
 </script>
