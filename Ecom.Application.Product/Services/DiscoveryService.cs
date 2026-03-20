@@ -1,15 +1,10 @@
 ﻿using Ecom.Application.Product.Interfaces;
 using Ecom.Application.Product.Models;
+using Ecom.Web.Shared.Interfaces;
 using Ecom.Web.Shared.Models;
-using Ecom.Web.Shared.Models.Product;
 using Ecom.Web.Shared.Models.Product.Discovery;
-using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
-using System;
-using System.Collections.Generic;
 using System.Net.Http.Json;
-using System.Text;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace Ecom.Application.Product.Services
 {
@@ -17,12 +12,13 @@ namespace Ecom.Application.Product.Services
     {
         private readonly ILogger<DiscoveryService> _logger;
         private readonly HttpClient _httpClient;
-        private readonly IMemoryCache _memoryCache;
-        public DiscoveryService(ILogger<DiscoveryService> logger, HttpClient httpClient, IMemoryCache memoryCache) {
+        private readonly ICacheService _cacheService;
+        public DiscoveryService(ILogger<DiscoveryService> logger, HttpClient httpClient,
+            ICacheService cacheService) {
         
             _logger = logger;
             _httpClient = httpClient;   
-            _memoryCache = memoryCache;
+            _cacheService = cacheService;
         }
 
         public async Task<ProductFilterMenuViewModel> GetProductFilterMenuAsync()
@@ -30,10 +26,8 @@ namespace Ecom.Application.Product.Services
             const string cacheKey = "MenuFilters";
 
             // 1. Kiểm tra cache trước để tránh gọi API dư thừa
-            if (_memoryCache.TryGetValue(cacheKey, out ProductFilterMenuViewModel? cachedData) && cachedData != null)
-            {
-                return cachedData;
-            }
+            var cachedMenu = _cacheService.Get<ProductFilterMenuViewModel>(cacheKey);
+            if (cachedMenu != null) { return cachedMenu; }
 
             try
             {
@@ -54,12 +48,7 @@ namespace Ecom.Application.Product.Services
                     return new ProductFilterMenuViewModel();
                 }
 
-                // 3. Lưu vào RAM trong 30 phút cho lần gọi sau
-                var cacheOptions = new MemoryCacheEntryOptions()
-                    .SetAbsoluteExpiration(TimeSpan.FromMinutes(30))
-                    .SetPriority(CacheItemPriority.Normal);
-
-                _memoryCache.Set(cacheKey, result.Data, cacheOptions);
+                _cacheService.Set(cacheKey, result.Data);             
 
                 return result.Data;
             }

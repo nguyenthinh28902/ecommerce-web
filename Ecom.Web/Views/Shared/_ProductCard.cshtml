@@ -21,10 +21,16 @@
        asp-route-categorySlug="@(Model.CategoryNameAscii ?? "danhmuc")"
        asp-route-productSlug="@Model.NameAscii"
        class="aspect-square overflow-hidden rounded-xl mb-4 bg-gray-50 block">
-
-        <img src="@(string.IsNullOrEmpty(Model.MainImage) ? "/images/no-image.png" : Model.MainImage)"
+       @* dùng ảnh chung ảnh tạo quá nặng *@
+        <img src="@(string.IsNullOrEmpty(Model.MainImage) ? "/images/no-image.jpg" : Model.MainImage)"
              alt="@Model.Name"
+             loading="lazy"
              class="w-full h-full object-contain group-hover:scale-110 transition-transform duration-500" />
+
+        @* <img src="~/images/no-image.jpg"
+             alt="@Model.Name"
+             loading="lazy"
+             class="w-full h-full object-contain group-hover:scale-110 transition-transform duration-500" /> *@
     </a>
 
     <div class="flex flex-col flex-grow">

@@ -17,6 +17,8 @@ namespace Ecom.Web.Controllers
             _logger = logger;
             _productService = productService;
         }
+
+        [ResponseCache(Duration = 60, Location = ResponseCacheLocation.Any)]
         public async Task<IActionResult> Index()
         {
             var result = await _productService.GetHomeProductDisplayViewModelAsync();
