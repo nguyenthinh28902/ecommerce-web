@@ -19,17 +19,18 @@ Hệ thống quản trị (Dashboard) dành cho nhân viên vận hành, quản 
   * [Cấu hình tại Product Service](https://github.com/nguyenthinh28902/Ecom.ProductService)
 
 ---
-## 🛠 Công nghệ & Giải pháp
-* **Framework:** .NET 10 / ASP.NET Core MVC.
-* **Security Protocol:** OpenID Connect (OIDC) & OAuth 2.0.
-* **State Management:** Memory Cache, Secure Cookies.
-* **UI Stack:** Tailwind CSS & Vue.js (Hybrid Model).
+## 🛠 Technology Used (Công nghệ sử dụng)
+* **Framework & Architecture:** .NET 10 / ASP.NET Core MVC, mô hình MVVM.
+* **Security Protocol:** OpenID Connect (OIDC) & OAuth 2.0, JWT, Cookie Authentication.
+* **State Management:** Memory Cache.
+* **UI Stack:** Tailwind CSS.
 
 ---
 
 ## 🔐 Workflow: Authentication & Authorization (Luồng xác thực)
 
 Dự án triển khai cơ chế xác thực tập trung để đảm bảo an toàn cho dữ liệu quản trị:
+![Sơ đồ hệ thống](https://raw.githubusercontent.com/nguyenthinh28902/mini-project-ecommerce/refs/heads/main/images/identity-claims-mapping.png)
 
 ### 1. Phân tầng bảo mật (Middleware Configuration)
 Hệ thống sử dụng cơ chế **Challenge OIDC** để ép buộc xác thực ngay khi người dùng truy cập các tài nguyên nhạy cảm.
@@ -45,28 +46,14 @@ Hệ thống tự động quản lý vòng đời của Access Token để đả
 
 ---
 
-## 💻 Technical Snippets (Điểm nhấn kỹ thuật)
+## 💻 Security Architecture (Kiến trúc bảo mật)
 
-### 1. External Identity Provider Challenge (Chuyển hướng xác thực)
-Thực hiện cơ chế Challenge để yêu cầu định danh từ Identity Server khi người dùng truy cập các tài nguyên yêu cầu bảo mật.
+### 1. Session & Identity (Kiến trúc Bảo mật & Quản lý Phiên)
+* Sử dụng Cookie Authentication để duy trì phiên làm việc (Session Management), kết hợp với giao thức OpenID Connect (OIDC) để thực hiện xác thực thông qua Identity Server.
+* Thực hiện chuyển đổi trạng thái từ Token-based (nhận từ Identity Server) sang Session-based (tại Client MVC). Sau khi xác thực thành công, Middleware sẽ tự động trích xuất các Claims và Token để map vào một Cookie bảo mật.
+* Bảo mật: Để Server quản lý phiên đăng nhập giúp kiểm soát bảo mật an toàn hơn, tận dụng tối đa công nghệ bảo mật của .Net. Đặc biệt, việc thiết lập thuộc tính HttpOnly cho Cookie giúp ngăn chặn hoàn toàn khả năng truy cập token từ Script, loại bỏ rủi ro lỗ hổng bảo mật XSS.
 
-* **File:** [SignInController.cs](https://github.com/nguyenthinh28902/ecommerce-cms-web/blob/main/Ecom.Cms.Web/Controllers/SignInController.cs)
-* **Giải pháp:** Sử dụng `ValidateAntiForgeryToken` và kiểm tra `IsLocalUrl` để ngăn chặn các cuộc tấn công giả mạo (CSRF) và điều hướng không an toàn (Open Redirect).
-
-```csharp
-[HttpPost("chuyen-trang-dang-nhap")]
-[ValidateAntiForgeryToken]
-public IActionResult RedirectToLogin(string returnUrl)
-{
-    var url = (string.IsNullOrEmpty(returnUrl) || !Url.IsLocalUrl(returnUrl)) ? "/" : returnUrl;
-    return Challenge(new AuthenticationProperties { RedirectUri = url }, "oidc");
-}
-```
-
-### 2. Security Middleware & Policy (Cấu hình chính sách bảo mật)
-Thiết lập cơ chế lưu trữ phiên làm việc qua Cookie và giao thức kết nối bảo mật với Identity Provider.
-
-* **File:** [AuthenticationExtensions.cs](https://github.com/nguyenthinh28902/ecommerce-cms-web/blob/main/Ecom.Cms.Web/Common/Auth/AuthenticationExtensions.cs)
+* **File:** [AuthenticationExtensions.cs](https://github.com/nguyenthinh28902/ecommerce-cms-web/blob/main/Ecom.Cms.Web/Common/Auth/AuthenticationExtensions.cs#L21)
 * **Giải pháp:** Triển khai **Authorization Code Flow với PKCE** và thiết lập thuộc tính Cookie nghiêm ngặt (`HttpOnly`, `SecurePolicy`) để bảo vệ Access Token.
 
 ```csharp
@@ -91,13 +78,13 @@ services.AddAuthentication(options => {
 });
 ```
 
-### 3. Transparent Token Refresh Mechanism (Cơ chế làm mới Token tự động)
+### 2. Transparent Token Management (Cơ chế làm mới Token)
 Sử dụng `DelegatingHandler` để tự động đính kèm mã thông báo và xử lý gia hạn phiên làm việc một cách trong suốt.
 
 * **File:** [AuthenticationHeaderHandler.cs](https://github.com/nguyenthinh28902/ecommerce-cms-web/blob/main/Ecom.Cms.Web/Common/HeaderHandler/AuthenticationHeaderHandler.cs)
 * **Giải pháp:** Đánh chặn lỗi `401 Unauthorized`, tự động gọi `RefreshTokenAsync` và thực hiện lại (retry) request gốc với token mới để đảm bảo trải nghiệm người dùng không bị gián đoạn.
 
-```csharp
+```csharp 
 protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken ct)
 {
     var accessToken = await _httpContextAccessor.HttpContext.GetTokenAsync("access_token");
@@ -113,12 +100,43 @@ protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage 
         if (refreshResult.IsSuccess)
         {
             await _authTokenCookie.UpdateAuthCookie(refreshResult.Data);
-            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", result.Data.AccessToken);
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", refreshResult.Data.AccessToken);
             return await base.SendAsync(request, ct); // Retry request
         }
     }
     return response;
 }
 ```
+---
+## 🚀 Memory Cache
+### 🧠 1. In-Memory Cache Service
+* **Cơ chế vận hành:** Sử dụng mô hình kết hợp giữa **TTL (Time-to-Live)** và **LRU (Least Recently Used)** thông qua các thuộc tính `AbsoluteExpiration` và `SlidingExpiration`. Cách tiếp cận này đảm bảo dữ liệu cũ luôn được làm mới định kỳ, đồng thời tự động loại bỏ các vùng nhớ ít được truy cập để tối ưu không gian lưu trữ.
+* **Kiểm soát tài nguyên:** Thiết lập ngưỡng **SizeLimit** nghiêm ngặt cho bộ nhớ đệm. Giúp kiểm soát dung lượng RAM chiếm dụng, ngăn ngừa rủi ro tràn bộ nhớ và đảm bảo ứng dụng vận hành ổn định.
+* **Độ tin cậy:** Tận dụng tối đa công nghệ quản lý bộ nhớ của **.NET** để tự động điều phối thứ tự ưu tiên (`CacheItemPriority`), giúp hệ thống luôn giữ lại các dữ liệu quan trọng nhất khi tài nguyên hệ thống chạm ngưỡng giới hạn.
+### 🔧 2. Cache Service Implementation (Triển khai Cache Service)
+* **Service Registration (Đăng ký dịch vụ):** [Program.cs](https://github.com/nguyenthinh28902/ecommerce-web/blob/main/Ecom.Web/Program.cs#L15)
 
+```csharp
+builder.Services.AddMemoryCache(options =>
+{
+    // Giới hạn tổng số lượng item hoặc dung lượng
+    options.SizeLimit = 1000;
+    // Tần suất quét để dọn dẹp các item hết hạn (mặc định 1 phút)
+    options.ExpirationScanFrequency = TimeSpan.FromSeconds(30);
+});
+```
+
+* **Core Cache Logic Implementation (Triển khai logic cốt lõi):** [CacheService.cs](https://github.com/nguyenthinh28902/ecommerce-web/blob/main/Ecom.Web.Shared/Service/CacheService.cs#L30)
+
+```csharp
+// Cấu hình các tùy chọn cho Cache Item
+var cacheOptions = new MemoryCacheEntryOptions
+{
+    // Thuật toán dọn dẹp mặc định của IMemoryCache là SlidingExpiration kết hợp Priority
+    AbsoluteExpirationRelativeToNow = expiration ?? _defaultExpiration,
+    SlidingExpiration = TimeSpan.FromMinutes(10), // Nếu item không được truy cập trong 10 phút, nó sẽ bị dọn dẹp
+    Priority = CacheItemPriority.High, // Ưu tiên giữ lại khi RAM đầy
+    Size = 1 // Kích thước của item, giúp IMemoryCache quản lý bộ nhớ tốt hơn
+};
+```
 ---
