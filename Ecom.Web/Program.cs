@@ -47,6 +47,7 @@ builder.Services.AddResponseCompression(options =>
 {
     options.EnableForHttps = true;
 });
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.

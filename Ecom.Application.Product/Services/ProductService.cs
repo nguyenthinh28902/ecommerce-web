@@ -28,28 +28,39 @@ namespace Ecom.Application.Product.Services
         {
             const string cacheKey = "GetHomeProductDisplayViewModelAsync";
 
-            // 1. Kiểm tra cache trước để tránh gọi API dư thừa
+            // 1. Kiểm tra cache (Giữ nguyên)
             var cachedProduct = _cacheService.Get<HomeProductDisplayViewModel>(cacheKey);
-            if(cachedProduct != default && cachedProduct != null) { return Result<HomeProductDisplayViewModel>.Success(cachedProduct,"cache");  }
+            if (cachedProduct != null) { return Result<HomeProductDisplayViewModel>.Success(cachedProduct, "cache"); }
 
-            var response = await _httpClient.GetAsync(ConfigApiProductService.GetGetProductHome);
-            if(!response.IsSuccessStatusCode)
+            try
             {
-                _logger.LogInformation($"{nameof(GetHomeProductDisplayViewModelAsync)}: lấy danh sách sản phẩm cho trang chủ thất bại{response.StatusCode}");
-                return Result<HomeProductDisplayViewModel>.Failure("");
-            }
+                // Dòng này sẽ quăng Exception nếu Product API chưa chạy trong Docker
+                var response = await _httpClient.GetAsync(ConfigApiProductService.GetGetProductHome);
 
-            var jsonString = await response.Content.ReadAsStringAsync();
-            var result = await response.Content.ReadFromJsonAsync<Result<HomeProductDisplayViewModel>>();
-            
-            if(result == null || !result.IsSuccess)
+                if (!response.IsSuccessStatusCode)
+                {
+                    _logger.LogWarning($"{nameof(GetHomeProductDisplayViewModelAsync)}: API trả về lỗi {response.StatusCode}");
+                    return Result<HomeProductDisplayViewModel>.Failure("Service trả về lỗi");
+                }
+
+                var result = await response.Content.ReadFromJsonAsync<Result<HomeProductDisplayViewModel>>();
+
+                if (result == null || !result.IsSuccess)
+                {
+                    return Result<HomeProductDisplayViewModel>.Failure("Dữ liệu rỗng");
+                }
+
+                _cacheService.Set(cacheKey, result.Data, TimeSpan.FromMinutes(5));
+                return result;
+            }
+            catch (Exception ex)
             {
-                _logger.LogInformation($"{nameof(GetHomeProductDisplayViewModelAsync)}: lấy danh sách sản phẩm cho trang chủ thất bại");
-                return Result<HomeProductDisplayViewModel>.Failure("");
-            }
+                // Log lỗi quan trọng để biết kết nối thất bại
+                _logger.LogError(ex, $"{nameof(GetHomeProductDisplayViewModelAsync)}: Không thể kết nối tới Product Service");
 
-            _cacheService.Set(cacheKey, result.Data, TimeSpan.FromMinutes(5)); // 5 phút là quá đủ dùng cho trang lượng truy cập lớn.
-            return result;
+                // Trả về Failure thay vì để Crash toàn bộ trang Web
+                return Result<HomeProductDisplayViewModel>.Failure("Service đang bảo trì");
+            }
         }
 
         public async Task<Result<ProductListViewModel>> GetProductsAsync(string slug, int trang, string? timkiem)
@@ -63,7 +74,7 @@ namespace Ecom.Application.Product.Services
                 CategorySlug = cat,
                 BrandSlug = brand,
                 Page = trang > 0 ? trang : 1,
-                PageSize = 3,
+                PageSize = 15,
                 SearchTerm = timkiem
             };
 

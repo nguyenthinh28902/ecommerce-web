@@ -63,6 +63,7 @@ namespace Ecom.Web.Common.Auth
                     }
                 }
                 options.Events = new OpenIdConnectEvents {
+
                     OnTokenValidated = async context =>
                     {
                         var logger = context.HttpContext.RequestServices.GetRequiredService<ILogger<Program>>();

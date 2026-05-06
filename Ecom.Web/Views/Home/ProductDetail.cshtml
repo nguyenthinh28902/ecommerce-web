@@ -202,26 +202,41 @@
     }
 
     async function addToBag(productId, variantId) {
-        try {
-            const response = await fetch('/gio-hang/them-moi', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ productId: productId, variantId: variantId ,quantity: 1 })
-            });
+    // Tìm nút bấm dựa trên sự kiện hoặc selector
+    const btn = event.currentTarget;
+    
+    // Khóa nút để tránh spam click
+    btn.disabled = true;
+    btn.innerText = 'Đang xử lý...';
+    btn.classList.add('opacity-50', 'cursor-not-allowed');
 
-            const result = await response.json();
+    try {
+        const response = await fetch('/gio-hang/them-moi', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ productId: productId, variantId: variantId, quantity: 1 })
+        });
+        
+        const result = await response.json();
 
-            if (result.isSuccess) {
-                // Điều hướng sang trang giỏ hàng hoặc hiện thông báo
-                window.location.href = '/gio-hang';
-            } else {
-                alert(result.noti || "Không thể thêm vào giỏ hàng");
-            }
-        } catch (error) {
-            console.error("Lỗi:", error);
-            alert("Đã có lỗi xảy ra khi kết nối hệ thống");
+        if (result.isSuccess) {
+            window.location.href = '/gio-hang';
+        } else {
+            alert(result.noti || "Không thể thêm vào giỏ hàng");
+            // Mở lại nút nếu có lỗi từ server để người dùng thử lại
+            btn.disabled = false;
+            btn.innerText = 'Thêm vào giỏ hàng';
+            btn.classList.remove('opacity-50', 'cursor-not-allowed');
         }
+    } catch (error) {
+        console.error("Lỗi:", error);
+        alert("Đã có lỗi xảy ra khi kết nối hệ thống");
+        // Mở lại nút nếu lỗi kết nối
+        btn.disabled = false;
+        btn.innerText = 'Thêm vào giỏ hàng';
+        btn.classList.remove('opacity-50', 'cursor-not-allowed');
     }
+}
 </script>

@@ -35,6 +35,7 @@ namespace Ecom.Web.Common.HeaderHandler
                 // Để hẳn 10 phút cho thoải mái Debug
                 client.Timeout = TimeSpan.FromMinutes(10);
             }); // Cần thêm dòng này
+
             services.AddHttpClient<IUserInformation, UserInformation>(client =>
             {
                 client.BaseAddress = new Uri($"{configServiceUrl.GatewayUrl}{ConfigApiUser.GetDefault}");
