@@ -7,10 +7,19 @@ using Ecom.Web.Common.AuthCookie;
 using Ecom.Web.Common.Config;
 using Ecom.Web.Common.HeaderHandler;
 using Ecom.Web.Shared.Interfaces;
+using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
 Console.OutputEncoding = System.Text.Encoding.UTF8;
 Microsoft.IdentityModel.Logging.IdentityModelEventSource.ShowPII = true;
+// 1. Setup Serilog từ appsettings
+Log.Logger = new LoggerConfiguration()
+    .ReadFrom.Configuration(builder.Configuration)
+    .Enrich.FromLogContext() // Quan trọng để bắt được UserId, RequestId
+    .CreateLogger();
+
+builder.Host.UseSerilog();
+
 // Đăng ký IHttpClientFactory
 builder.Services.AddMemoryCache(options =>
 {
@@ -48,47 +57,63 @@ builder.Services.AddResponseCompression(options =>
     options.EnableForHttps = true;
 });
 
-var app = builder.Build();
 
-// Configure the HTTP request pipeline.
-if (!app.Environment.IsDevelopment())
+try
 {
-    app.UseExceptionHandler("/Home/Error");
-    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
-    app.UseHsts();
-}
-// 2. Sử dụng Middleware nén (đặt trước StaticFiles)
-app.UseResponseCompression();
-// Cấu hình trong Program.cs
-app.UseStaticFiles(new StaticFileOptions {
-    OnPrepareResponse = ctx =>
+    Log.Information("Service {AppName} đang khởi động...", nameof(Ecom.Web));
+    var app = builder.Build();
+
+    // Configure the HTTP request pipeline.
+    if (!app.Environment.IsDevelopment())
     {
-        // 3,888,000 giây = 45 ngày
-        const int durationInSeconds = 3888000;
-
-        // Chỉ cache cho thư mục chứa hình ảnh
-        if (ctx.Context.Request.Path.Value != null &&
-        ctx.Context.Request.Path.Value.Contains("https://zhlneinpjgzpjbpozskh.supabase.co"))
-        {
-            ctx.Context.Response.Headers[Microsoft.Net.Http.Headers.HeaderNames.CacheControl] =
-                $"public,max-age={durationInSeconds}";
-        }
+        app.UseExceptionHandler("/Home/Error");
+        // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
+        app.UseHsts();
     }
-});
+    // 2. Sử dụng Middleware nén (đặt trước StaticFiles)
+    app.UseResponseCompression();
+    // Cấu hình trong Program.cs
+    app.UseStaticFiles(new StaticFileOptions
+    {
+        OnPrepareResponse = ctx =>
+        {
+            // 3,888,000 giây = 45 ngày
+            const int durationInSeconds = 3888000;
 
-app.UseHttpsRedirection();
-app.UseRouting();
+            // Chỉ cache cho thư mục chứa hình ảnh
+            if (ctx.Context.Request.Path.Value != null &&
+            ctx.Context.Request.Path.Value.Contains("https://zhlneinpjgzpjbpozskh.supabase.co"))
+            {
+                ctx.Context.Response.Headers[Microsoft.Net.Http.Headers.HeaderNames.CacheControl] =
+                    $"public,max-age={durationInSeconds}";
+            }
+        }
+    });
 
-app.UseSession(); // Phải nằm trước Authentication
-app.UseAuthentication();
-app.UseAuthorization();
+    app.UseHttpsRedirection();
+    app.UseRouting();
 
-app.MapStaticAssets();
+    app.UseSession(); // Phải nằm trước Authentication
+    app.UseAuthentication();
+    app.UseAuthorization();
 
-app.MapControllerRoute(
-    name: "default",
-    pattern: "{controller=Home}/{action=Index}/{id?}")
-    .WithStaticAssets();
+    app.MapStaticAssets();
+
+    app.MapControllerRoute(
+        name: "default",
+        pattern: "{controller=Home}/{action=Index}/{id?}")
+        .WithStaticAssets();
 
 
-app.Run();
+    app.Run();
+}
+catch (Exception ex)
+{
+    Log.Fatal(ex, "Service sập rồi!");
+}
+finally
+{
+    Log.CloseAndFlush();
+}
+
+
